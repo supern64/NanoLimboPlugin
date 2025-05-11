@@ -52,6 +52,9 @@ public class NanoLimboVelocity {
                     (InetSocketAddress) velocityLimboServer.getLimboConfig().getAddress());
             servers.put(serverInfo.getName(), server);
             this.server.registerServer(serverInfo);
+            if (velocityLimboServer.getAddToTryList()) {
+                this.server.getConfiguration().getAttemptConnectionOrder().add(serverInfo.getName());
+            }
             try {
                 server.start();
             } catch (Exception ex) {

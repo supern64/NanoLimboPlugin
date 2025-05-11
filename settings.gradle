@@ -1,5 +1,5 @@
 rootProject.name = 'NanoLimbo'
 
 include 'api'
-include 'bungee'
+// include 'bungee'
 include 'velocity'
