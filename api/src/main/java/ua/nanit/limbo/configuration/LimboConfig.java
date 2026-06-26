@@ -2,10 +2,14 @@ package ua.nanit.limbo.configuration;
 
 import java.net.SocketAddress;
 
+import net.kyori.adventure.text.Component;
+
+import ua.nanit.limbo.server.TransportType;
 import ua.nanit.limbo.server.data.BossBar;
 import ua.nanit.limbo.server.data.InfoForwarding;
 import ua.nanit.limbo.server.data.PingData;
 import ua.nanit.limbo.server.data.Title;
+import ua.nanit.limbo.world.DimensionType;
 
 public interface LimboConfig {
     SocketAddress getAddress();
@@ -14,7 +18,7 @@ public interface LimboConfig {
 
     PingData getPingData();
 
-    String getDimensionType();
+    DimensionType getDimensionType();
 
     int getGameMode();
 
@@ -25,6 +29,8 @@ public interface LimboConfig {
     long getReadTimeout();
 
     int getDebugLevel();
+
+    boolean isLogPlayersIp();
 
     boolean isUseBrandName();
 
@@ -38,9 +44,9 @@ public interface LimboConfig {
 
     boolean isUseHeaderAndFooter();
 
-    String getBrandName();
+    Component getBrandName();
 
-    String getJoinMessage();
+    Component getJoinMessage();
 
     BossBar getBossBar();
 
@@ -48,11 +54,11 @@ public interface LimboConfig {
 
     String getPlayerListUsername();
 
-    String getPlayerListHeader();
+    Component getPlayerListHeader();
 
-    String getPlayerListFooter();
+    Component getPlayerListFooter();
 
-    boolean isUseEpoll();
+    TransportType getTransportType();
 
     int getBossGroupSize();
 
@@ -77,5 +83,7 @@ public interface LimboConfig {
     double getInterval();
 
     double getMaxPacketRate();
+
+    double getMaxPacketBytesRate();
 
 }

@@ -15,28 +15,29 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ua.nanit.limbo.protocol.packets.login;
+package ua.nanit.limbo.util;
 
-import ua.nanit.limbo.protocol.ByteMessage;
-import ua.nanit.limbo.protocol.PacketOut;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+import ua.nanit.limbo.protocol.Packet;
+import ua.nanit.limbo.protocol.registry.State;
 import ua.nanit.limbo.protocol.registry.Version;
 
-public class PacketDisconnect implements PacketOut {
+import java.util.Locale;
 
-    private String reason;
+@UtilityClass
+public class PacketUtils {
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    @NonNull
+    public static String toPacketId(int packetId) {
+        return "0x" + Integer.toHexString(packetId).toUpperCase(Locale.ROOT);
     }
 
-    @Override
-    public void encode(ByteMessage msg, Version version) {
-        msg.writeString(String.format("{\"text\": \"%s\"}", reason));
+    @NonNull
+    public static String toDetailedInfo(@NonNull Packet packet,
+                                        int packetId,
+                                        @NonNull Version version,
+                                        @NonNull State state) {
+        return packet + "(" + toPacketId(packetId) + ") [" + version + "|" + state + "]";
     }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName();
-    }
-
 }

@@ -26,17 +26,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import net.kyori.adventure.text.Component;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import ua.nanit.limbo.server.data.BossBar;
-import ua.nanit.limbo.server.data.InfoForwarding;
-import ua.nanit.limbo.server.data.PingData;
-import ua.nanit.limbo.server.data.Title;
-import ua.nanit.limbo.util.Colors;
+import ua.nanit.limbo.configuration.serializers.*;
+import ua.nanit.limbo.server.TransportType;
+import ua.nanit.limbo.server.data.*;
+import ua.nanit.limbo.world.DimensionType;
 
+@RequiredArgsConstructor
+@Getter
 public final class YamlLimboConfig implements LimboConfig {
 
     private final Path root;
@@ -46,7 +51,7 @@ public final class YamlLimboConfig implements LimboConfig {
     private int maxPlayers;
     private PingData pingData;
 
-    private String dimensionType;
+    private DimensionType dimensionType;
     private int gameMode;
     private boolean secureProfile;
 
@@ -57,20 +62,21 @@ public final class YamlLimboConfig implements LimboConfig {
     private boolean usePlayerList;
     private boolean useHeaderAndFooter;
 
-    private String brandName;
-    private String joinMessage;
+    private Component brandName;
+    private Component joinMessage;
     private BossBar bossBar;
     private Title title;
 
     private String playerListUsername;
-    private String playerListHeader;
-    private String playerListFooter;
+    private Component playerListHeader;
+    private Component playerListFooter;
 
     private InfoForwarding infoForwarding;
     private long readTimeout;
     private int debugLevel;
+    private boolean logPlayersIp;
 
-    private boolean useEpoll;
+    private TransportType transportType;
     private int bossGroupSize;
     private int workerGroupSize;
 
@@ -78,11 +84,7 @@ public final class YamlLimboConfig implements LimboConfig {
     private int maxPacketSize;
     private double interval;
     private double maxPacketRate;
-
-    public YamlLimboConfig(Path root,ClassLoader classLoader) {
-        this.root = root;
-        this.classLoader = classLoader;
-    }
+    private double maxPacketBytesRate;
 
     public YamlLimboConfig load() throws Exception {
         ConfigurationOptions options = ConfigurationOptions.defaults().serializers(getSerializers());
@@ -94,17 +96,11 @@ public final class YamlLimboConfig implements LimboConfig {
         ConfigurationNode conf = loader.load();
 
         address = conf.node("bind").get(SocketAddress.class);
-        maxPlayers = conf.node("maxPlayers").getInt();
+        maxPlayers = conf.node("maxPlayers").getInt(100);
         pingData = conf.node("ping").get(PingData.class);
-        dimensionType = conf.node("dimension").getString("overworld");
-        if (dimensionType.equalsIgnoreCase("nether")) {
-            dimensionType = "the_nether";
-        }
-        if (dimensionType.equalsIgnoreCase("end")) {
-            dimensionType = "the_end";
-        }
-        gameMode = conf.node("gameMode").getInt();
-        secureProfile = conf.node("secureProfile").getBoolean();
+        dimensionType = conf.node("dimension").get(DimensionType.class, DimensionType.THE_END);
+        gameMode = conf.node("gameMode").getInt(3);
+        secureProfile = conf.node("secureProfile").getBoolean(false);
         useBrandName = conf.node("brandName", "enable").getBoolean();
         useJoinMessage = conf.node("joinMessage", "enable").getBoolean();
         useBossBar = conf.node("bossBar", "enable").getBoolean();
@@ -113,28 +109,33 @@ public final class YamlLimboConfig implements LimboConfig {
         playerListUsername = conf.node("playerList", "username").getString();
         useHeaderAndFooter = conf.node("headerAndFooter", "enable").getBoolean();
 
-        if (useBrandName)
-            brandName = conf.node("brandName", "content").getString();
+        if (useBrandName) {
+            brandName = conf.node("brandName", "content").get(Component.class, Component.empty());
+        }
 
-        if (useJoinMessage)
-            joinMessage = Colors.of(conf.node("joinMessage", "text").getString(""));
+        if (useJoinMessage) {
+            joinMessage = conf.node("joinMessage", "text").get(Component.class, Component.empty());
+        }
 
-        if (useBossBar)
+        if (useBossBar) {
             bossBar = conf.node("bossBar").get(BossBar.class);
+        }
 
-        if (useTitle)
+        if (useTitle) {
             title = conf.node("title").get(Title.class);
+        }
 
         if (useHeaderAndFooter) {
-            playerListHeader = Colors.of(conf.node("headerAndFooter", "header").getString());
-            playerListFooter = Colors.of(conf.node("headerAndFooter", "footer").getString());
+            playerListHeader = conf.node("headerAndFooter", "header").get(Component.class, Component.empty());
+            playerListFooter = conf.node("headerAndFooter", "footer").get(Component.class, Component.empty());
         }
 
         infoForwarding = conf.node("infoForwarding").get(InfoForwarding.class);
-        readTimeout = conf.node("readTimeout").getLong();
-        debugLevel = conf.node("debugLevel").getInt();
+        readTimeout = conf.node("readTimeout").getLong(30000);
+        debugLevel = conf.node("debugLevel").getInt(2);
+        logPlayersIp = conf.node("logPlayersIp").getBoolean(true);
 
-        useEpoll = conf.node("netty", "useEpoll").getBoolean(true);
+        transportType = conf.node("netty", "transportType").get(TransportType.class, TransportType.EPOLL);
         bossGroupSize = conf.node("netty", "threads", "bossGroup").getInt(1);
         workerGroupSize = conf.node("netty", "threads", "workerGroup").getInt(4);
 
@@ -142,9 +143,12 @@ public final class YamlLimboConfig implements LimboConfig {
         maxPacketSize = conf.node("traffic", "maxPacketSize").getInt(-1);
         interval = conf.node("traffic", "interval").getDouble(-1.0);
         maxPacketRate = conf.node("traffic", "maxPacketRate").getDouble(-1.0);
+        maxPacketBytesRate = conf.node("traffic", "maxPacketBytesRate").getDouble(-1.0);
+
         return this;
     }
 
+    @NonNull
     private BufferedReader getReader() throws IOException {
         String name = "settings.yml";
         Path filePath = Paths.get(root.toString(), name);
@@ -152,8 +156,9 @@ public final class YamlLimboConfig implements LimboConfig {
         if (!Files.exists(filePath)) {
             InputStream stream = classLoader.getResourceAsStream(name);
 
-            if (stream == null)
+            if (stream == null) {
                 throw new FileNotFoundException("Cannot find settings resource file");
+            }
 
             Files.copy(stream, filePath);
         }
@@ -164,156 +169,14 @@ public final class YamlLimboConfig implements LimboConfig {
     private TypeSerializerCollection getSerializers() {
         return TypeSerializerCollection.builder()
                 .register(SocketAddress.class, new SocketAddressSerializer())
-                .register(InfoForwarding.class, new InfoForwarding.Serializer())
-                .register(PingData.class, new PingData.Serializer())
-                .register(BossBar.class, new BossBar.Serializer())
-                .register(Title.class, new Title.Serializer())
+                .register(Component.class, new ComponentSerializer())
+                .register(TransportType.class, new TransportTypeSerializer())
+                .register(DimensionType.class, new DimensionTypeSerializer())
+                .register(InfoForwarding.class, new InfoForwardingSerializer(root))
+                .register(PingData.class, new PingDataSerializer())
+                .register(BossBar.class, new BossBarSerializer())
+                .register(Title.class, new TitleSerializer())
                 .build();
-    }
-
-    @Override
-    public SocketAddress getAddress() {
-        return address;
-    }
-
-    @Override
-    public int getMaxPlayers() {
-        return maxPlayers;
-    }
-
-    @Override
-    public PingData getPingData() {
-        return pingData;
-    }
-
-    @Override
-    public String getDimensionType() {
-        return dimensionType;
-    }
-
-    @Override
-    public int getGameMode() {
-        return gameMode;
-    }
-
-    @Override
-    public boolean isSecureProfile() {
-        return secureProfile;
-    }
-
-    @Override
-    public InfoForwarding getInfoForwarding() {
-        return infoForwarding;
-    }
-
-    @Override
-    public long getReadTimeout() {
-        return readTimeout;
-    }
-
-    @Override
-    public int getDebugLevel() {
-        return debugLevel;
-    }
-
-    @Override
-    public boolean isUseBrandName() {
-        return useBrandName;
-    }
-
-    @Override
-    public boolean isUseJoinMessage() {
-        return useJoinMessage;
-    }
-
-    @Override
-    public boolean isUseBossBar() {
-        return useBossBar;
-    }
-
-    @Override
-    public boolean isUseTitle() {
-        return useTitle;
-    }
-
-    @Override
-    public boolean isUsePlayerList() {
-        return usePlayerList;
-    }
-
-    @Override
-    public boolean isUseHeaderAndFooter() {
-        return useHeaderAndFooter;
-    }
-
-    @Override
-    public String getBrandName() {
-        return brandName;
-    }
-
-    @Override
-    public String getJoinMessage() {
-        return joinMessage;
-    }
-
-    @Override
-    public BossBar getBossBar() {
-        return bossBar;
-    }
-
-    @Override
-    public Title getTitle() {
-        return title;
-    }
-
-    @Override
-    public String getPlayerListUsername() {
-        return playerListUsername;
-    }
-
-    @Override
-    public String getPlayerListHeader() {
-        return playerListHeader;
-    }
-
-    @Override
-    public String getPlayerListFooter() {
-        return playerListFooter;
-    }
-
-    @Override
-    public boolean isUseEpoll() {
-        return useEpoll;
-    }
-
-    @Override
-    public int getBossGroupSize() {
-        return bossGroupSize;
-    }
-
-    @Override
-    public int getWorkerGroupSize() {
-        return workerGroupSize;
-    }
-
-    @Override
-    public boolean isUseTrafficLimits() {
-        return useTrafficLimits;
-    }
-
-    @Override
-    public int getMaxPacketSize() {
-        return maxPacketSize;
-    }
-
-    @Override
-    public double getInterval() {
-        return interval;
-    }
-
-    @Override
-    public double getMaxPacketRate() {
-        return maxPacketRate;
     }
 
 }

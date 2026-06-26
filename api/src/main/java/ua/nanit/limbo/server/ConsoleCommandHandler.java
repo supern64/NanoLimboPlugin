@@ -1,5 +1,6 @@
 package ua.nanit.limbo.server;
 
+import org.jspecify.annotations.NonNull;
 import ua.nanit.limbo.server.commands.CmdConn;
 import ua.nanit.limbo.server.commands.CmdHelp;
 import ua.nanit.limbo.server.commands.CmdMem;
@@ -16,7 +17,7 @@ public final class ConsoleCommandHandler extends Thread implements CommandHandle
     }
 
     @Override
-    public void register(Command cmd) {
+    public void register(@NonNull Command cmd) {
         commands.put(cmd.name().toLowerCase(), cmd);
     }
 
@@ -38,7 +39,7 @@ public final class ConsoleCommandHandler extends Thread implements CommandHandle
     }
 
     @Override
-    public Collection<Command> getCommands() {
+    public @NonNull Collection<Command> getCommands() {
         return Collections.unmodifiableCollection(commands.values());
     }
 

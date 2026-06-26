@@ -2,17 +2,16 @@ package ua.nanit.limbo.server.commands;
 
 import java.util.Collection;
 
+import lombok.AllArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import ua.nanit.limbo.server.Command;
 import ua.nanit.limbo.server.LimboServer;
 import ua.nanit.limbo.server.Log;
 
+@AllArgsConstructor
 public class CmdHelp implements Command {
 
     private final LimboServer server;
-
-    public CmdHelp(LimboServer server) {
-        this.server = server;
-    }
 
     @Override
     public void execute() {
@@ -26,12 +25,12 @@ public class CmdHelp implements Command {
     }
 
     @Override
-    public String name() {
+    public @NonNull String name() {
         return "help";
     }
 
     @Override
-    public String description() {
+    public @NonNull String description() {
         return "Show this message";
     }
 }

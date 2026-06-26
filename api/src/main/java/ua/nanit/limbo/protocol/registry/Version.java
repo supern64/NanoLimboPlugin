@@ -17,11 +17,16 @@
 
 package ua.nanit.limbo.protocol.registry;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@RequiredArgsConstructor
+@Getter
 public enum Version {
-
     UNDEFINED(-1, "UNDEFINED"),
     V1_7_2(4, "1.7.2"),
     // 1.7.2-1.7.5 has same protocol numbers
@@ -81,7 +86,12 @@ public enum Version {
     V1_21_4(769, "1.21.4"),
     V1_21_5(770, "1.21.5"),
     V1_21_6(771, "1.21.6"),
-    V1_21_7(772, "1.21.7");
+    V1_21_7(772, "1.21.7"),
+    // 1.21.8 has same protocol number
+    V1_21_9(773, "1.21.9"),
+    // 1.21.10 has same protocol number
+    V1_21_11(774, "1.21.11"),
+    V26_1(775, "26.1");
 
     private static final Map<Integer, Version> VERSION_MAP;
     private static final Version MAX;
@@ -104,40 +114,23 @@ public enum Version {
     private final String displayName;
     private Version prev;
 
-    Version(int protocolNumber, String displayName) {
-        this.protocolNumber = protocolNumber;
-        this.displayName = displayName;
-    }
-
-    public int getProtocolNumber() {
-        return this.protocolNumber;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public Version getPrev() {
-        return prev;
-    }
-
-    public boolean more(Version another) {
+    public boolean more(@NonNull Version another) {
         return this.protocolNumber > another.protocolNumber;
     }
 
-    public boolean moreOrEqual(Version another) {
+    public boolean moreOrEqual(@NonNull Version another) {
         return this.protocolNumber >= another.protocolNumber;
     }
 
-    public boolean less(Version another) {
+    public boolean less(@NonNull Version another) {
         return this.protocolNumber < another.protocolNumber;
     }
 
-    public boolean lessOrEqual(Version another) {
+    public boolean lessOrEqual(@NonNull Version another) {
         return this.protocolNumber <= another.protocolNumber;
     }
 
-    public boolean fromTo(Version min, Version max) {
+    public boolean fromTo(@NonNull Version min, @NonNull Version max) {
         return this.protocolNumber >= min.protocolNumber && this.protocolNumber <= max.protocolNumber;
     }
 
@@ -145,14 +138,17 @@ public enum Version {
         return this != UNDEFINED;
     }
 
+    @NonNull
     public static Version getMin() {
         return V1_7_2;
     }
 
+    @NonNull
     public static Version getMax() {
         return MAX;
     }
 
+    @NonNull
     public static Version of(int protocolNumber) {
         return VERSION_MAP.getOrDefault(protocolNumber, UNDEFINED);
     }

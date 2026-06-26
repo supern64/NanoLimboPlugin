@@ -1,5 +1,6 @@
 package ua.nanit.limbo.server.commands;
 
+import org.jspecify.annotations.NonNull;
 import ua.nanit.limbo.server.Command;
 import ua.nanit.limbo.server.Log;
 
@@ -22,12 +23,12 @@ public class CmdMem implements Command {
     }
 
     @Override
-    public String name() {
+    public @NonNull String name() {
         return "mem";
     }
 
     @Override
-    public String description() {
+    public @NonNull String description() {
         return "Display memory usage";
     }
 }

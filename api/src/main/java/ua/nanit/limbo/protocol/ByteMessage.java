@@ -17,13 +17,23 @@
 
 package ua.nanit.limbo.protocol;
 
+import com.google.gson.JsonElement;
 import io.netty.buffer.*;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import io.netty.util.ByteProcessor;
-import net.kyori.adventure.nbt.*;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import net.kyori.adventure.nbt.BinaryTagIO;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.jetbrains.annotations.NotNull;
 import ua.nanit.limbo.connection.PlayerPublicKey;
 import ua.nanit.limbo.protocol.registry.Version;
+import ua.nanit.limbo.server.data.NamespacedKey;
+import ua.nanit.limbo.util.ComponentUtils;
+import ua.nanit.limbo.util.NbtUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,15 +47,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import org.jetbrains.annotations.NotNull;
-
+@AllArgsConstructor
 public class ByteMessage extends ByteBuf {
 
     private final ByteBuf buf;
-
-    public ByteMessage(ByteBuf buf) {
-        this.buf = buf;
-    }
 
     public byte[] toByteArray() {
         byte[] bytes = new byte[buf.readableBytes()];
@@ -125,8 +130,7 @@ public class ByteMessage extends ByteBuf {
             throw new DecoderException("Cannot receive string longer than " + maxLen * 3 + " (got " + len + " bytes)");
         }
 
-        final String s = buf.toString(buf.readerIndex(), len, StandardCharsets.UTF_8);
-        buf.readerIndex(buf.readerIndex() + len);
+        final String s = buf.readString(len, StandardCharsets.UTF_8);
 
         if (s.length() > maxLen) {
             throw new DecoderException("Cannot receive string longer than " + maxLen + " (got " + s.length() + " characters)");
@@ -197,10 +201,19 @@ public class ByteMessage extends ByteBuf {
     }
 
     public void writeLongArray(long[] array) {
+        if (array == null) {
+            writeVarInt(0);
+            return;
+        }
+
         writeVarInt(array.length);
         for (long i : array) {
             writeLong(i);
         }
+    }
+
+    public void writeBitSet(BitSet bitSet) {
+        writeLongArray((bitSet != null ? bitSet.toLongArray() : null));
     }
 
     public void writeCompoundTagArray(CompoundBinaryTag[] compoundTags) {
@@ -223,6 +236,17 @@ public class ByteMessage extends ByteBuf {
         }
     }
 
+    public void writeNamespacedKey(@NonNull NamespacedKey namespacedKey) {
+        writeString(namespacedKey.toString());
+    }
+
+    public void writeNamespacedKeyArray(@NonNull NamespacedKey[] keys) {
+        writeVarInt(keys.length);
+        for (NamespacedKey namespacedKey : keys) {
+            writeNamespacedKey(namespacedKey);
+        }
+    }
+
     public void writeCompoundTag(CompoundBinaryTag compoundTag, Version version) {
         try (ByteBufOutputStream stream = new ByteBufOutputStream(buf)) {
             if (version.moreOrEqual(Version.V1_20_2)) {
@@ -235,11 +259,15 @@ public class ByteMessage extends ByteBuf {
         }
     }
 
-    public void writeNbtMessage(NbtMessage nbtMessage, Version version) {
+    public void writeComponent(@NonNull Component component, @NonNull Version version) {
+        GsonComponentSerializer gsonComponentSerializer = ComponentUtils.getJsonChatSerializer(version);
+
         if (version.moreOrEqual(Version.V1_20_3)) {
-            writeCompoundTag(nbtMessage.getTag(), version);
+            JsonElement jsonElement = gsonComponentSerializer.serializeToTree(component);
+            CompoundBinaryTag binaryTag = (CompoundBinaryTag) NbtUtils.fromJson(jsonElement);
+            writeCompoundTag(binaryTag, version);
         } else {
-            writeString(nbtMessage.getJson());
+            writeString(gsonComponentSerializer.serialize(component));
         }
     }
 

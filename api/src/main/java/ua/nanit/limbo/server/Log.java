@@ -17,45 +17,50 @@
 
 package ua.nanit.limbo.server;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+@UtilityClass
 public final class Log {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("hh:mm:ss");
     private static int debugLevel = Level.INFO.getIndex();
 
-    private Log() {}
-
     public static int getLevel() {
         return debugLevel;
     }
 
-    public static void info(Object msg, Object... args) {
+    public static void info(@NonNull Object msg, @Nullable Object... args) {
         print(Level.INFO, msg, null, args);
     }
 
-    public static void debug(Object msg, Object... args) {
+    public static void debug(@NonNull Object msg, @Nullable Object... args) {
         print(Level.DEBUG, msg, null, args);
     }
 
-    public static void warning(Object msg, Object... args) {
+    public static void warning(@NonNull Object msg, @Nullable Object... args) {
         print(Level.WARNING, msg, null, args);
     }
 
-    public static void warning(Object msg, Throwable t, Object... args) {
+    public static void warning(@NonNull Object msg, @NonNull Throwable t, @Nullable Object... args) {
         print(Level.WARNING, msg, t, args);
     }
 
-    public static void error(Object msg, Object... args) {
+    public static void error(@NonNull Object msg, @Nullable Object... args) {
         print(Level.ERROR, msg, null, args);
     }
 
-    public static void error(Object msg, Throwable t, Object... args) {
+    public static void error(@NonNull Object msg, @NonNull Throwable t, @Nullable Object... args) {
         print(Level.ERROR, msg, t, args);
     }
 
-    public static void print(Level level, Object msg, Throwable t, Object... args) {
+    public static void print(Level level, @NonNull Object msg, @NonNull Throwable t, @Nullable Object... args) {
         if (debugLevel >= level.getIndex()) {
             String output = String.format("%s: %s", getPrefix(level), String.format(msg.toString(), args));
             System.out.print(output);
@@ -79,8 +84,9 @@ public final class Log {
         debugLevel = level;
     }
 
+    @AllArgsConstructor
+    @Getter
     public enum Level {
-
         ERROR("ERROR", 0),
         WARNING("WARNING", 1),
         INFO("INFO", 2),
@@ -88,18 +94,5 @@ public final class Log {
 
         private final String display;
         private final int index;
-
-        Level(String display, int index) {
-            this.display = display;
-            this.index = index;
-        }
-
-        public String getDisplay() {
-            return display;
-        }
-
-        public int getIndex() {
-            return index;
-        }
     }
 }

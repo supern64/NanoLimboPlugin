@@ -7,6 +7,7 @@ import com.bivashy.limbo.NanoLimboVelocity;
 import com.bivashy.limbo.command.exception.SendComponentException;
 import com.bivashy.limbo.command.exception.VelocityExceptionHandler;
 
+import org.jspecify.annotations.NonNull;
 import revxrsal.commands.CommandHandler;
 import revxrsal.commands.velocity.core.VelocityHandler;
 import ua.nanit.limbo.server.Command;
@@ -36,12 +37,12 @@ public class LampVelocityCommandHandler implements ua.nanit.limbo.server.Command
     }
 
     @Override
-    public Collection<Command> getCommands() {
+    public @NonNull Collection<Command> getCommands() {
         return Collections.emptyList();
     }
 
     @Override
-    public void register(Command command) {
+    public void register(@NonNull Command command) {
         commandHandler.register(command);
     }
 

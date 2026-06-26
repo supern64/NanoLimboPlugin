@@ -18,12 +18,12 @@
 package ua.nanit.limbo.connection;
 
 import io.netty.buffer.ByteBufAllocator;
-import net.kyori.adventure.nbt.BinaryTag;
-import net.kyori.adventure.nbt.CompoundBinaryTag;
-import net.kyori.adventure.nbt.IntBinaryTag;
-import net.kyori.adventure.nbt.ListBinaryTag;
+import lombok.Getter;
+import lombok.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import ua.nanit.limbo.LimboConstants;
 import ua.nanit.limbo.protocol.ByteMessage;
+import ua.nanit.limbo.protocol.MetadataWriter;
 import ua.nanit.limbo.protocol.PacketSnapshot;
 import ua.nanit.limbo.protocol.packets.configuration.PacketFinishConfiguration;
 import ua.nanit.limbo.protocol.packets.configuration.PacketKnownPacks;
@@ -34,25 +34,16 @@ import ua.nanit.limbo.protocol.packets.play.*;
 import ua.nanit.limbo.protocol.registry.Version;
 import ua.nanit.limbo.server.LimboServer;
 import ua.nanit.limbo.server.data.Title;
-import ua.nanit.limbo.util.NbtMessageUtil;
-import ua.nanit.limbo.util.UuidUtil;
-import ua.nanit.limbo.protocol.packets.play.PacketBossBar;
-import ua.nanit.limbo.protocol.packets.play.PacketChatMessage;
-import ua.nanit.limbo.protocol.packets.play.PacketDeclareCommands;
-import ua.nanit.limbo.protocol.packets.play.PacketJoinGame;
-import ua.nanit.limbo.protocol.packets.play.PacketPlayerAbilities;
-import ua.nanit.limbo.protocol.packets.play.PacketPlayerInfo;
-import ua.nanit.limbo.protocol.packets.play.PacketPlayerListHeader;
-import ua.nanit.limbo.protocol.packets.play.PacketPlayerPositionAndLook;
-import ua.nanit.limbo.protocol.packets.play.PacketPluginMessage;
-import ua.nanit.limbo.protocol.packets.play.PacketTitleLegacy;
-import ua.nanit.limbo.protocol.packets.play.PacketTitleSetSubTitle;
-import ua.nanit.limbo.protocol.packets.play.PacketTitleSetTitle;
-import ua.nanit.limbo.protocol.packets.play.PacketTitleTimes;
+import ua.nanit.limbo.util.ComponentUtils;
+import ua.nanit.limbo.util.UUIDUtils;
+import ua.nanit.limbo.world.DimensionRegistry;
+import ua.nanit.limbo.world.DimensionType;
+import ua.nanit.limbo.world.VersionedDimension;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+@Getter
 public final class PacketSnapshots {
 
     private PacketSnapshot packetLoginSuccess;
@@ -79,34 +70,33 @@ public final class PacketSnapshots {
     private PacketSnapshot packetTitleLegacyTimes;
 
     private PacketSnapshot packetRegistryData;
+    private static Map<Version, List<PacketSnapshot>> packetsRegistryData;
 
     private PacketSnapshot packetKnownPacks;
 
     private PacketSnapshot packetUpdateTags;
 
-    private List<PacketSnapshot> packetsRegistryData1_20_5;
-    private List<PacketSnapshot> packetsRegistryData1_21;
-    private List<PacketSnapshot> packetsRegistryData1_21_2;
-    private List<PacketSnapshot> packetsRegistryData1_21_4;
-    public static List<PacketSnapshot> PACKETS_REGISTRY_DATA_1_21_5;
-    public static List<PacketSnapshot> PACKETS_REGISTRY_DATA_1_21_6;
-    public static List<PacketSnapshot> PACKETS_REGISTRY_DATA_1_21_7;
-
     private PacketSnapshot packetFinishConfiguration;
 
-    private List<PacketSnapshot> packetsEmptyChunks;
+    private List<PacketSnapshot> packetsChunks;
     private PacketSnapshot packetStartWaitingChunks;
 
     public PacketSnapshots(LimboServer server) {
-        final String username = server.getConfig().getPingData().getVersion();
-        final UUID uuid = UuidUtil.getOfflineModeUuid(username);
+        String playerListName = server.getConfig().getPlayerListUsername();
+        if (playerListName.length() > 16) {
+            playerListName = playerListName.substring(0, 16);
+        }
+
+        final UUID uuid = UUIDUtils.getOfflineModeUuid(playerListName);
 
         PacketLoginSuccess loginSuccess = new PacketLoginSuccess();
-        loginSuccess.setUsername(username);
+        loginSuccess.setUsername(playerListName);
         loginSuccess.setUuid(uuid);
 
-        PacketJoinGame joinGame = new PacketJoinGame();
-        String worldName = "minecraft:" + server.getConfig().getDimensionType().toLowerCase(Locale.ROOT);
+        PacketLogin joinGame = new PacketLogin();
+        DimensionType dimensionType = server.getConfig().getDimensionType();
+        DimensionRegistry dimensionRegistry = server.getDimensionRegistry();
+        VersionedDimension versionedDimension = dimensionType.createVersionedDimension(dimensionRegistry);
         joinGame.setEntityId(0);
         joinGame.setEnableRespawnScreen(true);
         joinGame.setFlat(false);
@@ -118,14 +108,12 @@ public final class PacketSnapshots {
         joinGame.setReducedDebugInfo(true);
         joinGame.setDebug(false);
         joinGame.setViewDistance(0);
-        joinGame.setWorldName(worldName);
-        joinGame.setWorldNames(worldName);
-        joinGame.setHashedSeed(0);
-        joinGame.setDimensionRegistry(server.getDimensionRegistry());
+        joinGame.setSeed(0);
+        joinGame.setDimension(versionedDimension);
 
         PacketPlayerAbilities playerAbilities = new PacketPlayerAbilities();
         playerAbilities.setFlyingSpeed(0.0F);
-        playerAbilities.setFlags(0x02);
+        playerAbilities.setFlying(true);
         playerAbilities.setFieldOfView(0.1F);
 
         int teleportId = ThreadLocalRandom.current().nextInt();
@@ -136,13 +124,13 @@ public final class PacketSnapshots {
         PacketPlayerPositionAndLook positionAndLook
                 = new PacketPlayerPositionAndLook(0, 400, 0, 0, 0, teleportId);
 
-        PacketSpawnPosition spawnPosition = new PacketSpawnPosition(0, 400, 0);
+        PacketSpawnPosition spawnPosition = new PacketSpawnPosition(versionedDimension.getKey(), 0, 400, 0, 0, 0);
 
         PacketDeclareCommands declareCommands = new PacketDeclareCommands();
         declareCommands.setCommands(Collections.emptyList());
 
         PacketPlayerInfo info = new PacketPlayerInfo();
-        info.setUsername(server.getConfig().getPlayerListUsername());
+        info.setUsername(playerListName);
         info.setGameMode(server.getConfig().getGameMode());
         info.setUuid(uuid);
 
@@ -158,8 +146,8 @@ public final class PacketSnapshots {
 
         if (server.getConfig().isUseHeaderAndFooter()) {
             PacketPlayerListHeader header = new PacketPlayerListHeader();
-            header.setHeader(NbtMessageUtil.create(server.getConfig().getPlayerListHeader()));
-            header.setFooter(NbtMessageUtil.create(server.getConfig().getPlayerListFooter()));
+            header.setHeader(server.getConfig().getPlayerListHeader());
+            header.setFooter(server.getConfig().getPlayerListFooter());
             packetHeaderAndFooter = PacketSnapshot.of(header);
         }
 
@@ -168,7 +156,7 @@ public final class PacketSnapshots {
             pluginMessage.setChannel(LimboConstants.BRAND_CHANNEL);
             ByteMessage byteMessage = new ByteMessage(ByteBufAllocator.DEFAULT.heapBuffer());
             try {
-                byteMessage.writeString(server.getConfig().getBrandName());
+                byteMessage.writeString(ComponentUtils.toLegacyString(server.getConfig().getBrandName()));
                 pluginMessage.setData(byteMessage.toByteArray());
             } finally {
                 byteMessage.release();
@@ -178,7 +166,7 @@ public final class PacketSnapshots {
 
         if (server.getConfig().isUseJoinMessage()) {
             PacketChatMessage joinMessage = new PacketChatMessage();
-            joinMessage.setMessage(NbtMessageUtil.create(server.getConfig().getJoinMessage()));
+            joinMessage.setMessage(server.getConfig().getJoinMessage());
             joinMessage.setPosition(PacketChatMessage.PositionLegacy.SYSTEM_MESSAGE);
             joinMessage.setSender(UUID.randomUUID());
             packetJoinMessage = PacketSnapshot.of(joinMessage);
@@ -242,37 +230,32 @@ public final class PacketSnapshots {
 
         this.packetUpdateTags = PacketSnapshot.of(PacketUpdateTags.class, (version) -> {
             PacketUpdateTags packetUpdateTags = new PacketUpdateTags();
-            if (version.moreOrEqual(Version.V1_21_7)) {
-                packetUpdateTags.setTags(parseUpdateTags(server.getDimensionRegistry().getTags_1_21_7()));
-            } else if (version.moreOrEqual(Version.V1_21_6)) {
-                packetUpdateTags.setTags(parseUpdateTags(server.getDimensionRegistry().getTags_1_21_6()));
-            } else if (version.moreOrEqual(Version.V1_21_5)) {
-                packetUpdateTags.setTags(parseUpdateTags(server.getDimensionRegistry().getTags_1_21_5()));
-            } else if (version.moreOrEqual(Version.V1_21_4)) {
-                packetUpdateTags.setTags(parseUpdateTags(server.getDimensionRegistry().getTags_1_21_4()));
-            } else if (version.moreOrEqual(Version.V1_21_2)) {
-                packetUpdateTags.setTags(parseUpdateTags(server.getDimensionRegistry().getTags_1_21_2()));
-            } else if (version.moreOrEqual(Version.V1_21)) {
-                packetUpdateTags.setTags(parseUpdateTags(server.getDimensionRegistry().getTags_1_21()));
-            } else {
-                packetUpdateTags.setTags(parseUpdateTags(server.getDimensionRegistry().getTags_1_20_5()));
-            }
-
+            Map<String, Map<String, List<Integer>>> tags = dimensionRegistry.createUpdateTags(version);
+            packetUpdateTags.setTags(tags);
             return packetUpdateTags;
         });
 
         PacketRegistryData registryData = new PacketRegistryData();
-        registryData.setDimensionRegistry(server.getDimensionRegistry());
+        registryData.setMetadataWriter((msg, version) -> msg.writeCompoundTag(dimensionRegistry.getCodec_1_20(), version));
 
         packetRegistryData = PacketSnapshot.of(registryData);
 
-        packetsRegistryData1_20_5 = createRegistryData(server, server.getDimensionRegistry().getCodec_1_20_5());
-        packetsRegistryData1_21 = createRegistryData(server, server.getDimensionRegistry().getCodec_1_21());
-        packetsRegistryData1_21_2 = createRegistryData(server, server.getDimensionRegistry().getCodec_1_21_2());
-        packetsRegistryData1_21_4 = createRegistryData(server, server.getDimensionRegistry().getCodec_1_21_4());
-        PACKETS_REGISTRY_DATA_1_21_5 = createRegistryData(server, server.getDimensionRegistry().getCodec_1_21_5());
-        PACKETS_REGISTRY_DATA_1_21_6 = createRegistryData(server, server.getDimensionRegistry().getCodec_1_21_6());
-        PACKETS_REGISTRY_DATA_1_21_7 = createRegistryData(server, server.getDimensionRegistry().getCodec_1_21_7());
+        Map<Version, List<PacketSnapshot>> perVersionRegistries = new EnumMap<>(Version.class);
+        for (Map.Entry<Version, List<MetadataWriter>> entry : dimensionRegistry.createPerVersionRegistries().entrySet()) {
+            Version version = entry.getKey();
+            List<MetadataWriter> registriesMetadata = entry.getValue();
+
+            List<PacketSnapshot> packetSnapshots = new ArrayList<>();
+            for (MetadataWriter writeableData : registriesMetadata) {
+                PacketRegistryData versionRegistryData = new PacketRegistryData();
+                versionRegistryData.setMetadataWriter(writeableData);
+
+                packetSnapshots.add(PacketSnapshot.of(versionRegistryData, version));
+            }
+
+            perVersionRegistries.put(version, packetSnapshots);
+        }
+        packetsRegistryData = perVersionRegistries;
 
         packetFinishConfiguration = PacketSnapshot.of(new PacketFinishConfiguration());
 
@@ -281,192 +264,31 @@ public final class PacketSnapshots {
         packetGameEvent.setValue(0);
         packetStartWaitingChunks = PacketSnapshot.of(packetGameEvent);
 
-        int chunkXOffset = (int) 0 >> 4; // Default x position is 0
-        int chunkZOffset = (int) 0 >> 4; // Default z position is 0
-        int chunkEdgeSize = 1; // TODO Make configurable?
+        int chunkXOffset = 0; // Default x position is 0
+        int chunkZOffset = 0; // Default z position is 0
+        int chunkEdgeSize = 1;
 
-        List<PacketSnapshot> emptyChunks = new ArrayList<>();
+        List<PacketSnapshot> chunks = new ArrayList<>();
         // Make multiple chunks for edges
         for (int chunkX = chunkXOffset - chunkEdgeSize; chunkX <= chunkXOffset + chunkEdgeSize; ++chunkX) {
             for (int chunkZ = chunkZOffset - chunkEdgeSize; chunkZ <= chunkZOffset + chunkEdgeSize; ++chunkZ) {
-                PacketEmptyChunk packetEmptyChunk = new PacketEmptyChunk();
-                packetEmptyChunk.setX(chunkX);
-                packetEmptyChunk.setZ(chunkZ);
+                PacketChunkWithLight packetChunkWithLight = new PacketChunkWithLight();
+                packetChunkWithLight.setX(chunkX);
+                packetChunkWithLight.setZ(chunkZ);
+                packetChunkWithLight.setDimension(versionedDimension);
 
-                emptyChunks.add(PacketSnapshot.of(packetEmptyChunk));
+                chunks.add(PacketSnapshot.of(packetChunkWithLight));
             }
         }
-        packetsEmptyChunks = emptyChunks;
+        packetsChunks = chunks;
     }
 
-    public PacketSnapshot getPacketLoginSuccess() {
-        return packetLoginSuccess;
+    public List<PacketSnapshot> getPacketsChunks() {
+        return Collections.unmodifiableList(packetsChunks);
     }
 
-    public PacketSnapshot getPacketJoinGame() {
-        return packetJoinGame;
+    @Nullable
+    public static List<PacketSnapshot> getPacketsRegistryData(@NonNull Version version) {
+        return packetsRegistryData.get(version);
     }
-
-    public PacketSnapshot getPacketSpawnPosition() {
-        return packetSpawnPosition;
-    }
-
-    public PacketSnapshot getPacketPluginMessage() {
-        return packetPluginMessage;
-    }
-
-    public PacketSnapshot getPacketPlayerAbilities() {
-        return packetPlayerAbilities;
-    }
-
-    public PacketSnapshot getPacketPlayerInfo() {
-        return packetPlayerInfo;
-    }
-
-    public PacketSnapshot getPacketDeclareCommands() {
-        return packetDeclareCommands;
-    }
-
-    public PacketSnapshot getPacketJoinMessage() {
-        return packetJoinMessage;
-    }
-
-    public PacketSnapshot getPacketBossBar() {
-        return packetBossBar;
-    }
-
-    public PacketSnapshot getPacketHeaderAndFooter() {
-        return packetHeaderAndFooter;
-    }
-
-    private static Map<String, Map<String, List<Integer>>> parseUpdateTags(CompoundBinaryTag tags) {
-        Map<String, Map<String, List<Integer>>> tagsMap = new HashMap<>();
-
-        for (Map.Entry<String, ? extends BinaryTag> namedTag : tags) {
-            Map<String, List<Integer>> subTagsMap = new HashMap<>();
-
-            CompoundBinaryTag subTag = (CompoundBinaryTag) namedTag.getValue();
-            for (Map.Entry<String, ? extends BinaryTag> subNamedTag : subTag) {
-                List<Integer> idsList = new ArrayList<>();
-                ListBinaryTag ids = (ListBinaryTag) subNamedTag.getValue();
-                for (BinaryTag id : ids) {
-                    idsList.add(((IntBinaryTag) id).value());
-                }
-
-                subTagsMap.put(subNamedTag.getKey(), idsList);
-            }
-
-            tagsMap.put(namedTag.getKey(), subTagsMap);
-        }
-
-        return tagsMap;
-    }
-
-    private static List<PacketSnapshot> createRegistryData(LimboServer server, CompoundBinaryTag dimensionTag) {
-        List<PacketSnapshot> packetRegistries = new ArrayList<>();
-        for (String registryType : dimensionTag.keySet()) {
-            CompoundBinaryTag compoundRegistryType = dimensionTag.getCompound(registryType);
-
-            PacketRegistryData registryData = new PacketRegistryData();
-            registryData.setDimensionRegistry(server.getDimensionRegistry());
-
-            ListBinaryTag values = compoundRegistryType.getList("value");
-            registryData.setMetadataWriter((message, version) -> {
-                message.writeString(registryType);
-
-                message.writeVarInt(values.size());
-                for (BinaryTag entry : values) {
-                    CompoundBinaryTag entryTag = (CompoundBinaryTag) entry;
-
-                    String name = entryTag.getString("name");
-                    CompoundBinaryTag element = entryTag.getCompound("element", null);
-
-                    message.writeString(name);
-                    if (element != null) {
-                        message.writeBoolean(true);
-                        message.writeCompoundTag(element, version);
-                    } else {
-                        message.writeBoolean(false);
-                    }
-                }
-            });
-
-            packetRegistries.add(PacketSnapshot.of(registryData));
-        }
-
-        return packetRegistries;
-    }
-
-    public PacketSnapshot getPacketPlayerPosAndLookLegacy() {
-        return packetPlayerPosAndLookLegacy;
-    }
-
-    public PacketSnapshot getPacketPlayerPosAndLook() {
-        return packetPlayerPosAndLook;
-    }
-
-    public PacketSnapshot getPacketTitleTitle() {
-        return packetTitleTitle;
-    }
-
-    public PacketSnapshot getPacketTitleSubtitle() {
-        return packetTitleSubtitle;
-    }
-
-    public PacketSnapshot getPacketTitleTimes() {
-        return packetTitleTimes;
-    }
-
-    public PacketSnapshot getPacketTitleLegacyTitle() {
-        return packetTitleLegacyTitle;
-    }
-
-    public PacketSnapshot getPacketTitleLegacySubtitle() {
-        return packetTitleLegacySubtitle;
-    }
-
-    public PacketSnapshot getPacketTitleLegacyTimes() {
-        return packetTitleLegacyTimes;
-    }
-
-    public PacketSnapshot getPacketRegistryData() {
-        return packetRegistryData;
-    }
-
-    public PacketSnapshot getPacketFinishConfiguration() {
-        return packetFinishConfiguration;
-    }
-
-    public List<PacketSnapshot> getPacketsEmptyChunks() {
-        return Collections.unmodifiableList(packetsEmptyChunks);
-    }
-
-    public PacketSnapshot getPacketStartWaitingChunks() {
-        return packetStartWaitingChunks;
-    }
-
-    public PacketSnapshot getPacketKnownPacks() {
-        return packetKnownPacks;
-    }
-
-    public PacketSnapshot getPacketUpdateTags() {
-        return packetUpdateTags;
-    }
-
-    public List<PacketSnapshot> getPacketsRegistryData1_20_5() {
-        return packetsRegistryData1_20_5;
-    }
-
-    public List<PacketSnapshot> getPacketsRegistryData1_21() {
-        return packetsRegistryData1_21;
-    }
-
-    public List<PacketSnapshot> getPacketsRegistryData1_21_2() {
-        return packetsRegistryData1_21_2;
-    }
-
-    public List<PacketSnapshot> getPacketsRegistryData1_21_4() {
-        return packetsRegistryData1_21_4;
-    }
-
 }

@@ -17,17 +17,28 @@
 
 package ua.nanit.limbo.util;
 
-public final class Colors {
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
 
-    private static final char CHAR_FROM = '&';
-    private static final char CHAR_TO = '\u00a7';
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
-    private Colors() {
+@UtilityClass
+public class UUIDUtils {
+
+    @NonNull
+    public static UUID getOfflineModeUuid(@NonNull String username) {
+        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
     }
 
-    public static String of(String text) {
-        if (text == null) return null;
-        return text.replace(CHAR_FROM, CHAR_TO);
+    @NonNull
+    public static UUID fromString(@NonNull String str) {
+        if (str.contains("-")) {
+            return UUID.fromString(str);
+        }
+        return UUID.fromString(str.replaceFirst(
+                "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+                "$1-$2-$3-$4-$5"
+        ));
     }
-
 }

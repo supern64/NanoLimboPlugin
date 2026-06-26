@@ -1,115 +1,3 @@
-## For developers
-If you want to create Limbo using api you can follow this steps:
-### Get started
-**Maven**:
-```xml
-<repositories>
-   <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-   </repository>
-</repositories>
-<dependencies>
-    <dependency>
-       <groupId>com.github.bivashy.NanoLimboPlugin</groupId>
-       <artifactId>api</artifactId>
-       <version>1.0.11</version>
-    </dependency>
-</dependencies>
-```
-**Gradle**:
-```
-allprojects {
-   repositories {
-      maven { url 'https://jitpack.io' }
-   }
-}
-dependencies {
-    implementation 'com.github.bivashy.NanoLimboPlugin:api:1.0.11'
-}
-```
-### How to use API?
-That's easy!:
-```java
-LimboConfig config = new YamlLimboConfig(Paths.get("./"), classLoader).load();
-CommandHandler<Command> commandHandler = new ConsoleCommandHandler();
-LimboServer server = new LimboServer(config, commandHandler, getClass().getClassLoader());
-server.start();
-
-// When you are done
-server.stop();
-```
-Here we are passing 3 arguments:
-1. LimboConfig - Configures limbo server, defines `SocketAddress`, join message, title, dimension type, and etc.
-2. CommandHandler - Simple CommandHandler. It used by limbo for registering commands. Useful for console only, redundant for Bukkit, Bungee, and other platforms.
-3. ClassLoader - used only for loading dummy dimension files from the "resources" directory. It loads all dimensions from the "dimension" folder, which can be found at [this link](https://github.com/bivashy/NanoLimboPlugin/tree/main/api/src/main/resources/dimension).
----
-
-If you don't want to create or load config file, just implement `LimboConfig` interface, just like that:
-
-```java
-import java.net.SocketAddress;
-
-public class CustomLimboConfig implements LimboConfig {
-   /**
-    * Disables debug entirely
-    */
-   @Override
-   public int getDebugLevel() {
-      return -1;
-   }
-
-   /**
-    * Set F3 brand text to the "Some brand text"
-    */
-   @Override
-   public String getBrandName() {
-      return "Some brand text";
-   }
-
-   /**
-    * Launches limbo on the localhost:25555
-    */
-   @Override
-   public SocketAddress getAddress(){
-       return new InetSocketAddress("localhost", 25555);
-   }
-
-   // Implement all methods
-}
-```
-Then just pass to the LimboServer:
-```java
-LimboConfig config = new CustomLimboConfig();
-LimboServer server = new LimboServer(config, commandHandler, getClass().getClassLoader()); 
-```
-
----
-
-If you don't want limbo commands:
-
-```java
-import java.util.Collections;
-
-public class CustomCommandHandler implements CommandHandler<Command> {
-   @Override
-   public Collection<Command> getCommands() {
-      return Collections.emptyList();
-   }
-
-   public void register(T command) {
-   }
-
-   public boolean executeCommand(String input) {
-   }
-}
-```
-
-Then just pass to the LimboServer:
-```java
-CommandHandler<Command> commandHandler = new CustomCommandHandler();
-LimboServer server = new LimboServer(config, commandHandler, getClass().getClassLoader()); 
-```
 ## NanoLimbo
 
 This is a lightweight Minecraft limbo server, written in Java with Netty.
@@ -124,9 +12,10 @@ General features:
 * Doesn't spawn threads per player. Use a fixed thread pool.
 * Support for **BungeeCord** and **Velocity** info forwarding.
 * Support for [BungeeGuard](https://www.spigotmc.org/resources/79601/) handshake format.
+* Support for [MiniMessage](https://docs.papermc.io/adventure/minimessage/format/) text format.
 * Multiple versions support.
 * Fully configurable.
-* Lightweight. App size around **3MB**.
+* Lightweight. App size around **5MB**.
 
 ![](https://i.imgur.com/sT8p1Gz.png)
 
@@ -148,30 +37,32 @@ Symbol `X` means all minor versions.
 - [x] 1.18.X
 - [x] 1.19.X
 - [x] 1.20.X
-- [x] 1.21.X
+- [x] 1.21.X &nbsp; *(incl. 1.21.2, 1.21.3, 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10, 1.21.11)*
+- [x] 26.1.X
 
-The server **doesn't** support snapshot versions.
+The server **doesn't** support snapshots.
 
 ### Commands
 
 * `help` - Show help message
 * `conn` - Display number of connections
 * `mem` - Display memory usage stats
+* `version` - Display limbo version
 * `stop` - Stop the server
 
 Note that the server also will be closed correctly if you just press `Ctrl+C`.
 
 ### Installation
 
-Required software: JRE 11+
+Required software: JRE 17+
 
 The installation process is simple.
 
 1. Download the latest version of the program [**here**](https://github.com/Nan1t/NanoLimbo/releases).
 2. Put the jar file in the folder you want.
 3. Create a start script as you did for Bukkit or BungeeCord, with a command like this:
-   `java -jar NanoLimbo-<version>.jar`
-4. The server will create `settings.yml` file, which is the server configuration. 
+   `java -jar NanoLimbo.jar`
+4. The server will create `settings.yml` file, which is the server configuration.
 5. Configure it as you want and restart the server.
 
 ### Player info forwarding
@@ -188,6 +79,57 @@ Velocity config into `secret` field.
 If you installed BungeeGuard on your proxy, then use `BUNGEE_GUARD` forwarding type.
 Then add your tokens to `tokens` list.
 
+### Credits
+
+This release is built on top of community contributions across multiple forks.
+Huge thanks to everyone listed below — expand each section to see what they contributed.
+
+<details>
+<summary><b>Nan1t</b> — original author &amp; maintainer</summary>
+
+The entire foundation of NanoLimbo:
+
+- Netty pipeline, packet system, multi-version protocol skeleton up to 1.21
+- BungeeCord and Velocity info forwarding
+- Configuration framework, command system, dimension registry
+- Project structure, build setup, release process
+
+Source: https://github.com/Nan1t/NanoLimbo
+</details>
+
+<details>
+<summary><b>BoomEaro</b> (Valentine) — Minecraft 1.21.2 → 26.1, modernization</summary>
+
+The bulk of post-1.21 protocol work and toolchain modernization:
+
+- Protocol support for **1.21.2, 1.21.3, 1.21.4, 1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10, 1.21.11** and **26.1**
+- Rewrote the login → configuration phase for the post-1.20.5 known-packs handshake: `PacketKnownPacks`, `PacketUpdateTags`, per-version `PacketRegistryData`
+- Rewrote play packets for the 1.21.x line: `PacketLogin` (formerly `PacketJoinGame`), `PacketChunkWithLight` (real heightmaps + biome palette + light update), `PacketPlayerPositionAndLook` for the 1.21.2 teleport-flags redesign, `PacketGameEvent` with `start_waiting_for_chunks`
+- Build modernization: Gradle Kotlin DSL, version catalog, **Java 17**, Lombok, GitHub Actions for build & release
+- Adventure stack (api / gson / legacy / plain / json / nbt) + **MiniMessage** support in all text fields
+- Netty 4.2 split modules with native transports: epoll, io_uring (Linux x86_64 / aarch64) and kqueue (macOS x86_64 / aarch64); new `TransportType` enum
+- Per-connection traffic rate limiting in `ChannelTrafficHandler`
+- Refactored configuration serializers, `VersionedDimension`, `version` command
+
+Source: https://github.com/BoomEaro/NanoLimbo &nbsp;·&nbsp; upstream PR: [#98](https://github.com/Nan1t/NanoLimbo/pull/98)
+</details>
+
+<details>
+<summary><b>YueMi-Development</b> — external secret files</summary>
+
+- `@`-prefix support in `infoForwarding.secret` and `infoForwarding.tokens`: values starting with `@` are read from a file relative to the working directory. Lets you keep credentials out of `settings.yml` (Docker / Kubernetes secrets, SOPS, etc.).
+
+Source: https://github.com/YueMi-Development/NanoLimbo
+</details>
+
+<details>
+<summary><b>Biquaternions</b> — IP logging privacy switch</summary>
+
+- New `logPlayersIp` config flag. When `false`, player IP addresses are redacted in connection logs (shown as `<redacted>`). Useful for GDPR / privacy-compliant deployments.
+
+Source: https://github.com/Biquaternions/NanoLimbo &nbsp;·&nbsp; upstream PR: [#96](https://github.com/Nan1t/NanoLimbo/pull/96)
+</details>
+
 ### Contributing
 
 Feel free to create a pull request if you find some bug or optimization opportunity, or if you want
@@ -197,13 +139,13 @@ to add some functionality that is suitable for a limbo server and won't signific
 
 Required software:
 
-* JDK 11+
-* Gradle 7+ (optional)
+* JDK 17+
+* Gradle 9+ (optional)
 
 To build a minimized jar, go to the project root directory and run in the terminal:
 
 ```
-./gradlew shadowJar
+./gradlew build
 ```
 
 ### Contacts
