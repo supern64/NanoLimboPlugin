@@ -4,6 +4,7 @@ plugins {
 }
 
 group = "com.bivashy.limbo"
+version = "1.13.0"
 
 repositories {
     mavenCentral()
@@ -23,17 +24,17 @@ dependencies {
     annotationProcessor(libs.velocity.api)
 }
 
-tasks.compileJava {
-    options.encoding = "UTF-8"
-}
-
-tasks.build {
-    dependsOn("shadowJar")
-}
-
-tasks.shadowJar {
-    relocate("revxrsal.commands", "com.bivashy.shaded.revxrsal.commands")
-    minimize()
+tasks {
+    compileJava {
+        options.encoding = "UTF-8"
+    }
+    build {
+        dependsOn("shadowJar")
+    }
+    shadowJar {
+        relocate("revxrsal.commands", "com.bivashy.shaded.revxrsal.commands")
+        minimize()
+    }
 }
 
 java {

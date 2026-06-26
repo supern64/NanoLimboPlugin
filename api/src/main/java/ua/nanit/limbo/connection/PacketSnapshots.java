@@ -92,24 +92,25 @@ public final class PacketSnapshots {
         PacketLoginSuccess loginSuccess = new PacketLoginSuccess();
         loginSuccess.setUsername(playerListName);
         loginSuccess.setUuid(uuid);
+        loginSuccess.setSessionId(UUID.randomUUID());
 
-        PacketLogin joinGame = new PacketLogin();
+        PacketLogin packetLogin = new PacketLogin();
         DimensionType dimensionType = server.getConfig().getDimensionType();
         DimensionRegistry dimensionRegistry = server.getDimensionRegistry();
         VersionedDimension versionedDimension = dimensionType.createVersionedDimension(dimensionRegistry);
-        joinGame.setEntityId(0);
-        joinGame.setEnableRespawnScreen(true);
-        joinGame.setFlat(false);
-        joinGame.setGameMode(server.getConfig().getGameMode());
-        joinGame.setSecureProfile(server.getConfig().isSecureProfile());
-        joinGame.setHardcore(false);
-        joinGame.setMaxPlayers(server.getConfig().getMaxPlayers());
-        joinGame.setPreviousGameMode(-1);
-        joinGame.setReducedDebugInfo(true);
-        joinGame.setDebug(false);
-        joinGame.setViewDistance(0);
-        joinGame.setSeed(0);
-        joinGame.setDimension(versionedDimension);
+        packetLogin.setEntityId(new Random().nextInt(1, 999999));
+        packetLogin.setEnableRespawnScreen(true);
+        packetLogin.setFlat(false);
+        packetLogin.setGameMode(server.getConfig().getGameMode());
+        packetLogin.setSecureProfile(server.getConfig().isSecureProfile());
+        packetLogin.setHardcore(false);
+        packetLogin.setMaxPlayers(server.getConfig().getMaxPlayers());
+        packetLogin.setPreviousGameMode(-1);
+        packetLogin.setReducedDebugInfo(true);
+        packetLogin.setDebug(false);
+        packetLogin.setViewDistance(0);
+        packetLogin.setSeed(0);
+        packetLogin.setDimension(versionedDimension);
 
         PacketPlayerAbilities playerAbilities = new PacketPlayerAbilities();
         playerAbilities.setFlyingSpeed(0.0F);
@@ -135,7 +136,7 @@ public final class PacketSnapshots {
         info.setUuid(uuid);
 
         packetLoginSuccess = PacketSnapshot.of(loginSuccess);
-        packetJoinGame = PacketSnapshot.of(joinGame);
+        packetJoinGame = PacketSnapshot.of(packetLogin);
         packetPlayerPosAndLookLegacy = PacketSnapshot.of(positionAndLookLegacy);
         packetPlayerPosAndLook = PacketSnapshot.of(positionAndLook);
         packetSpawnPosition = PacketSnapshot.of(spawnPosition);

@@ -1,7 +1,7 @@
 [versions]
-netty = "4.2.11.Final"
-lombok = "1.18.44"
-shadow = "9.3.2"
+netty = "4.2.15.Final"
+lombok = "1.18.46"
+shadow = "9.4.2"
 gson = "2.13.2"
 configurate = "4.2.0"
 kyori-adventure = "4.26.1"
