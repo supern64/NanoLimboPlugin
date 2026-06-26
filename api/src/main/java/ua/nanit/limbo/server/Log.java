@@ -60,7 +60,7 @@ public final class Log {
         print(Level.ERROR, msg, t, args);
     }
 
-    public static void print(Level level, @NonNull Object msg, @NonNull Throwable t, @Nullable Object... args) {
+    public static void print(Level level, @NonNull Object msg, @Nullable Throwable t, @Nullable Object... args) {
         if (debugLevel >= level.getIndex()) {
             String output = String.format("%s: %s", getPrefix(level), String.format(msg.toString(), args));
             System.out.print(output);
