@@ -16,7 +16,7 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 
-import ua.nanit.limbo.NanoLimbo;
+import ua.nanit.limbo.LimboConstants;
 import ua.nanit.limbo.server.Command;
 import ua.nanit.limbo.server.CommandHandler;
 import ua.nanit.limbo.server.LimboServer;
@@ -24,7 +24,7 @@ import ua.nanit.limbo.server.LimboServer;
 @Plugin(id = "nanolimbovelocity", name = "NanoLimboVelocity", version = "1.0.15", authors = "bivashy, Nan1t")
 public class NanoLimboVelocity {
     static {
-        NanoLimbo.class.getName(); // For preventing shadow jar minimizing
+        LimboConstants.class.getName(); // For preventing shadow jar minimizing
     }
 
     private static NanoLimboVelocity instance;

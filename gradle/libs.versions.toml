@@ -6,7 +6,6 @@ gson = "2.13.2"
 configurate = "4.2.0"
 kyori-adventure = "4.26.1"
 lamp = "3.0.8"
-bungeecord-api = "26.1-R0.1-SNAPSHOT"
 velocity-api = "3.5.0-SNAPSHOT"
 
 [plugins]
@@ -32,9 +31,6 @@ kyori-adventure-text-serializer-json-legacy-impl = { module = "net.kyori:adventu
 kyori-adventure-nbt = { module = "net.kyori:adventure-nbt", version.ref = "kyori-adventure" }
 
 lamp-common = { module = "com.github.Revxrsal.Lamp:common", version.ref = "lamp" }
-lamp-bungee = { module = "com.github.Revxrsal.Lamp:bungee", version.ref = "lamp" }
 lamp-velocity = { module = "com.github.Revxrsal.Lamp:velocity", version.ref = "lamp" }
-
-bungeecord-api = { module = "net.md-5:bungeecord-api", version.ref = "bungeecord-api" }
 
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-api" }
