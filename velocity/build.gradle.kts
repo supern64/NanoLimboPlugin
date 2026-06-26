@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.bivashy.limbo"
-version = "1.13.0"
+version = "1.13.0-TCP"
 
 repositories {
     mavenCentral()
@@ -34,6 +34,7 @@ tasks {
     shadowJar {
         relocate("revxrsal.commands", "com.bivashy.shaded.revxrsal.commands")
         minimize()
+        archiveBaseName = "NanoLimboPluginVelocity"
     }
 }
 
