@@ -2,6 +2,8 @@ plugins {
     id("java")
 }
 
+group = "ua.nanit"
+
 repositories {
     mavenCentral()
 }
@@ -31,8 +33,13 @@ dependencies {
     annotationProcessor(libs.lombok)
 }
 
-tasks.compileJava {
-    options.encoding = "UTF-8"
+tasks {
+    compileJava {
+        options.encoding = "UTF-8"
+    }
+    jar {
+        archiveBaseName = "NanoLimboPluginAPI"
+    }
 }
 
 java {

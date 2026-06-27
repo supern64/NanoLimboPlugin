@@ -4,7 +4,6 @@ plugins {
 }
 
 group = "com.bivashy.limbo"
-version = "1.13.0-TCP"
 
 repositories {
     mavenCentral()
