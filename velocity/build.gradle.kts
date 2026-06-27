@@ -31,10 +31,16 @@ tasks {
     build {
         dependsOn("shadowJar")
     }
+    jar {
+        from("../LICENSE")
+        archiveBaseName = "NanoLimboPlugin"
+        archiveClassifier = "velocity-slim"
+    }
     shadowJar {
         relocate("revxrsal.commands", "com.bivashy.shaded.revxrsal.commands")
         minimize()
-        archiveBaseName = "NanoLimboPluginVelocity"
+        archiveBaseName = "NanoLimboPlugin"
+        archiveClassifier = "velocity"
     }
     withType<JavaCompile> {
         options.compilerArgs.add("-parameters")

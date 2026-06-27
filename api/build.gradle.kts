@@ -38,7 +38,9 @@ tasks {
         options.encoding = "UTF-8"
     }
     jar {
-        archiveBaseName = "NanoLimboPluginAPI"
+        from("../LICENSE")
+        archiveBaseName = "NanoLimboPlugin"
+        archiveClassifier = "api"
     }
 }
 
