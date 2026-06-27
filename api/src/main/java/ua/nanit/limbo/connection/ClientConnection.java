@@ -16,15 +16,15 @@
  */
 package ua.nanit.limbo.connection;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -108,7 +108,7 @@ public class ClientConnection extends ChannelInboundHandlerAdapter {
         handlePacket(msg);
     }
 
-    public void handlePacket(Object packet) {
+    public void handlePacket(@NonNull Object packet) {
         if (packet instanceof Packet) {
             ((Packet) packet).handle(this, server);
         }

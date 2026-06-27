@@ -247,7 +247,7 @@ public class ByteMessage extends ByteBuf {
         }
     }
 
-    public void writeCompoundTag(CompoundBinaryTag compoundTag, Version version) {
+    public void writeCompoundTag(@NonNull CompoundBinaryTag compoundTag, @NonNull Version version) {
         try (ByteBufOutputStream stream = new ByteBufOutputStream(buf)) {
             if (version.moreOrEqual(Version.V1_20_2)) {
                 BinaryTagIO.writer().writeNameless(compoundTag, stream, BinaryTagIO.Compression.NONE);
@@ -1221,7 +1221,7 @@ public class ByteMessage extends ByteBuf {
     }
 
     @Override
-    public @NotNull String toString(int index, int length, Charset charset) {
+    public String toString(int index, int length, Charset charset) {
         return buf.toString(index, length, charset);
     }
 
