@@ -16,7 +16,7 @@ Supports all *releases* between 1.7 and 26.2. Only Velocity is supported for now
 Required software: JRE 21+  
 The installation process is simple.
 
-1. Download the latest version of the plugin [**here**](https://github.com/Nan1t/NanoLimbo/releases).
+1. Download the latest version of the plugin [**here**](https://github.com/supern64/NanoLimboPlugin/releases).
 2. Put the jar file in your `plugins` folder.
 3. Configure the plugin and limbo servers within the `nanolimbovelocity` folder.
 
@@ -111,6 +111,7 @@ public class CustomCommandHandler implements CommandHandler<Command> {
    }
 
    public boolean executeCommand(String input) {
+       return true;
    }
 }
 ```
