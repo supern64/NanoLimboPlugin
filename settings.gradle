@@ -1,4 +1,0 @@
-rootProject.name = 'NanoLimbo'
-
-include 'api'
-include 'velocity'
