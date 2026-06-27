@@ -1,6 +1,15 @@
+# NanoLimboPlugin configuration
+# For configuration of the servers themselves, please check the settingsFolder for each limbo server.
+
+# Limbo servers
 limbos:
   first:
+    # Where to put the NanoLimbo settings for this server
     settingsFolder: first
+    # Whether to automatically add this limbo server to the connection attempt list
+    addToTryList: false
+
+# Localization
 messages:
   # PLAIN            - Just plain text without any color codes, etc
   # GSON             - text in new JSON format
