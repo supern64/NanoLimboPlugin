@@ -15,33 +15,25 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.bivashy.limbo.command;
+package com.bivashy.limbo.command.commands;
 
 import com.bivashy.limbo.NanoLimboVelocity;
-import com.bivashy.limbo.command.exception.SendComponentException;
 
 import revxrsal.commands.annotation.Command;
-import revxrsal.commands.annotation.Default;
+import revxrsal.commands.annotation.CommandPlaceholder;
 import revxrsal.commands.annotation.Dependency;
-import revxrsal.commands.command.CommandActor;
+import revxrsal.commands.velocity.actor.VelocityCommandActor;
 import revxrsal.commands.velocity.annotation.CommandPermission;
+import ua.nanit.limbo.server.LimboServer;
 
-@Command({"mem", "memory"})
-public class MemoryCommand {
+@Command("limboconn")
+public class ConnectionCountCommand {
     @Dependency
     private NanoLimboVelocity plugin;
 
-    @Default
-    @CommandPermission("limbo.memory")
-    public void execute(CommandActor actor) {
-        Runtime runtime = Runtime.getRuntime();
-        long mb = 1024 * 1024;
-        long used = (runtime.totalMemory() - runtime.freeMemory()) / mb;
-        long total = runtime.totalMemory() / mb;
-        long free = runtime.freeMemory() / mb;
-        long max = runtime.maxMemory() / mb;
-
-        throw new SendComponentException(
-                plugin.getLimboConfig().getMessages().message("memory", "%used%", used, "%total%", total, "%free%", free, "%max%", max));
+    @CommandPlaceholder
+    @CommandPermission("limbo.connection")
+    public void execute(VelocityCommandActor actor, LimboServer limboServer) {
+        actor.reply(plugin.getLimboConfig().getMessages().message("connection-count", "%count%", limboServer.getConnections().getCount()));
     }
 }

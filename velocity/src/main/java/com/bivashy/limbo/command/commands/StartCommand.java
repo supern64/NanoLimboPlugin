@@ -15,29 +15,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.bivashy.limbo.command;
+package com.bivashy.limbo.command.commands;
 
 import com.bivashy.limbo.NanoLimboVelocity;
-import com.bivashy.limbo.command.exception.SendComponentException;
 
 import revxrsal.commands.annotation.Command;
-import revxrsal.commands.annotation.Default;
+import revxrsal.commands.annotation.CommandPlaceholder;
 import revxrsal.commands.annotation.Dependency;
-import revxrsal.commands.command.CommandActor;
+import revxrsal.commands.velocity.actor.VelocityCommandActor;
 import revxrsal.commands.velocity.annotation.CommandPermission;
 import ua.nanit.limbo.server.LimboServer;
 
-@Command("limbostop")
-public class StopCommand {
+@Command("limbostart")
+public class StartCommand {
     @Dependency
     private NanoLimboVelocity plugin;
 
-    @Default
-    @CommandPermission("limbo.stop")
-    public void execute(CommandActor actor, LimboServer limboServer) {
-        if (!limboServer.isRunning())
-            throw new SendComponentException(plugin.getLimboConfig().getMessages().message("already-stopped"));
-        limboServer.stop();
-        throw new SendComponentException(plugin.getLimboConfig().getMessages().message("successfully-stopped"));
+    @CommandPlaceholder
+    @CommandPermission("limbo.start")
+    public void execute(VelocityCommandActor actor, LimboServer limboServer) throws Exception {
+        if (limboServer.isRunning()) {
+            actor.error(plugin.getLimboConfig().getMessages().message("already-running"));
+            return;
+        }
+        limboServer.start();
+        actor.reply(plugin.getLimboConfig().getMessages().message("successfully-started"));
     }
 }

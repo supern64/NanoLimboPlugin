@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":api"))
     implementation(libs.lamp.common)
     implementation(libs.lamp.velocity)
+    implementation(libs.lamp.brigadier)
 
     compileOnly(libs.kyori.adventure.text.serializer.minimessage)
     compileOnly(libs.configurate.yaml)
@@ -35,6 +36,9 @@ tasks {
         relocate("revxrsal.commands", "com.bivashy.shaded.revxrsal.commands")
         minimize()
         archiveBaseName = "NanoLimboPluginVelocity"
+    }
+    withType<JavaCompile> {
+        options.compilerArgs.add("-parameters")
     }
 }
 

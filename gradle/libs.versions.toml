@@ -5,7 +5,7 @@ shadow = "9.4.2"
 gson = "2.13.2"
 configurate = "4.2.0"
 kyori-adventure = "4.26.1"
-lamp = "3.0.8"
+lamp = "4.0.0-rc.17"
 velocity-api = "3.5.0-SNAPSHOT"
 
 [plugins]
@@ -30,7 +30,8 @@ kyori-adventure-text-serializer-minimessage = { module = "net.kyori:adventure-te
 kyori-adventure-text-serializer-json-legacy-impl = { module = "net.kyori:adventure-text-serializer-json-legacy-impl", version.ref = "kyori-adventure" }
 kyori-adventure-nbt = { module = "net.kyori:adventure-nbt", version.ref = "kyori-adventure" }
 
-lamp-common = { module = "com.github.Revxrsal.Lamp:common", version.ref = "lamp" }
-lamp-velocity = { module = "com.github.Revxrsal.Lamp:velocity", version.ref = "lamp" }
+lamp-common = { module = "io.github.revxrsal:lamp.common", version.ref = "lamp" }
+lamp-velocity = { module = "io.github.revxrsal:lamp.velocity", version.ref = "lamp" }
+lamp-brigadier = { module = "io.github.revxrsal:lamp.brigadier", version.ref = "lamp" }
 
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-api" }

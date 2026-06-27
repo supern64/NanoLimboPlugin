@@ -21,35 +21,36 @@ import java.util.Collection;
 import java.util.Collections;
 
 import com.bivashy.limbo.NanoLimboVelocity;
-import com.bivashy.limbo.command.exception.SendComponentException;
-import com.bivashy.limbo.command.exception.VelocityExceptionHandler;
+import com.bivashy.limbo.command.commands.*;
 
+import com.bivashy.limbo.command.type.LimboServerParameterType;
 import org.jspecify.annotations.NonNull;
-import revxrsal.commands.CommandHandler;
-import revxrsal.commands.velocity.core.VelocityHandler;
+import revxrsal.commands.Lamp;
+import revxrsal.commands.velocity.VelocityLamp;
+import revxrsal.commands.velocity.actor.VelocityCommandActor;
 import ua.nanit.limbo.server.Command;
 import ua.nanit.limbo.server.LimboServer;
 
+import static revxrsal.commands.velocity.VelocityVisitors.brigadier;
+
 public class LampVelocityCommandHandler implements ua.nanit.limbo.server.CommandHandler<Command> {
     private final NanoLimboVelocity plugin;
-    private final CommandHandler commandHandler;
+    private final Lamp<VelocityCommandActor> commandHandler;
 
     public LampVelocityCommandHandler(NanoLimboVelocity plugin) {
         this.plugin = plugin;
-        commandHandler = new VelocityHandler(plugin, plugin.getServer()).disableStackTraceSanitizing()
-                .setExceptionHandler(new VelocityExceptionHandler(plugin));
+        commandHandler = VelocityLamp.builder(plugin, plugin.getServer())
+                .exceptionHandler(new CommandExceptionHandler(plugin))
+                .dependency(NanoLimboVelocity.class, plugin)
+                .parameterTypes(builder -> {
+                    builder.addParameterType(LimboServer.class, new LimboServerParameterType(plugin));
+                })
+                .build();
     }
 
     public LampVelocityCommandHandler registerAll() {
-        commandHandler.registerValueResolver(LimboServer.class, context -> {
-            LimboServer limboServer = plugin.getServers().getOrDefault(context.popForParameter(), null);
-            if (limboServer == null)
-                throw new SendComponentException(plugin.getLimboConfig().getMessages().message("invalid-limbo"));
-            return limboServer;
-        });
-        commandHandler.registerExceptionHandler(SendComponentException.class, (actor, e) -> e.send(actor));
-        commandHandler.registerDependency(NanoLimboVelocity.class, plugin);
         commandHandler.register(new ConnectionCountCommand(), new HelpCommand(), new MemoryCommand(), new StopCommand(), new StartCommand());
+        commandHandler.accept(brigadier(plugin.getServer()));
         return this;
     }
 

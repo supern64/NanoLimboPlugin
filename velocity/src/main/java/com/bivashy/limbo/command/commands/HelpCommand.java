@@ -15,23 +15,22 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.bivashy.limbo.command;
+package com.bivashy.limbo.command.commands;
 
 import com.bivashy.limbo.NanoLimboVelocity;
-import com.bivashy.limbo.command.exception.SendComponentException;
 
 import revxrsal.commands.annotation.Command;
-import revxrsal.commands.annotation.Default;
+import revxrsal.commands.annotation.CommandPlaceholder;
 import revxrsal.commands.annotation.Dependency;
-import revxrsal.commands.command.CommandActor;
+import revxrsal.commands.velocity.actor.VelocityCommandActor;
 
 @Command("limbohelp")
 public class HelpCommand {
     @Dependency
     private NanoLimboVelocity plugin;
 
-    @Default
-    public void execute(CommandActor actor) {
-        throw new SendComponentException(plugin.getLimboConfig().getMessages().message("help"));
+    @CommandPlaceholder
+    public void execute(VelocityCommandActor actor) {
+        actor.reply(plugin.getLimboConfig().getMessages().message("help"));
     }
 }
